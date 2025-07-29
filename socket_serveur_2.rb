@@ -1,8 +1,13 @@
 require 'socket'
 require 'colorize'
 
+# Adresse d'écoute pour le serveur
+adresse = "127.0.0.1"
+adresse = ARGV[0] if ARGV[0].class.name != "NilClass"
+
 # Port d'écoute pour le serveur
-PORT = 3333
+port = 65000
+port = ARGV[1] if ARGV[1].class.name != "NilClass"
 
 # Limite du nombre de clients
 LIMITE = 10
@@ -11,8 +16,8 @@ LIMITE = 10
 CLIENTS = Array.new
 
 # On crée un serveur de sockets TCP et on le fait écouter
-serveur = TCPServer.new("127.0.0.1",PORT)
-print "Le serveur TCPSocket écoute au port #{PORT} ... \n"
+serveur = TCPServer.new(adresse,port)
+print "Serveur ouvert depuis #{adresse}:#{port} ... \n"
 
 LIMITE.times do |chiffre|
 
@@ -29,8 +34,7 @@ LIMITE.times do |chiffre|
 
       if message.strip == "sortie"
         client.puts "fincommu"
-        CLIENTS[chiffre] = nil
-        Thread.current[:client_handle] = nil
+        Thread.current.kill
         break
       end
 
@@ -42,10 +46,23 @@ LIMITE.times do |chiffre|
 
 end
 
+# Affiche tous les threads de clients du serveur
+def montrer_threads()
+  CLIENTS.each_with_index do |thready,index|
+    print "#{index}> #{thready.class.name} \n"
+  end
+end
+
 # Force tous les clients à quitter le serveur, provoquant l'arrêt de ce dernier.
 def vider_serveur()
-  CLIENTS.each_with_index do |thready| 
-      thready[:client_handle].puts "fincommu" if thready[:client_handle] != nil
+  CLIENTS.each_with_index do |thready,index| 
+    if thready.class.name != "NilClass"
+      #print thready[:client_handle].class.name , "\n"
+      if thready[:client_handle] != nil
+        thready[:client_handle].puts "fincommu"
+      end
+      thready.kill
+    end
   end
 end
 
@@ -54,13 +71,14 @@ def montrer_commande()
   print " kickall - Ejecte tous les clients du serveur sauf l'administrateur. \n"
   print " exit    - Ejecte tous les clients du serveur, y compris l'administrateur, et arrête le serveur. \n"
   print " help    - Affiche toutes les commandes et leurs descriptions. \n"
+  print " clients - Affiche tous les threads de clients \n"
 end
 
 # Un autre thread qui surveille les actions de l'administrateur du serveur
 ADMIN_THREAD = Thread.new do
   loop do
     print("ADMIN> ".light_red)
-    commande = gets
+    commande = STDIN.gets
     case commande.strip
     when "kickall"
       vider_serveur
@@ -68,6 +86,8 @@ ADMIN_THREAD = Thread.new do
       arreter_serveur
     when "help"
       montrer_commande
+    when "clients"
+      montrer_threads
     when ""
     else
       print("Commande inconnue.\n")
@@ -78,9 +98,7 @@ end
 # Fonction pour quitter le serveur et arrèter le serveur
 def arreter_serveur()
   print "Arret du serveur ! \n"
-  #puts ADMIN_THREAD.class
   vider_serveur
-  CLIENTS.each { |thready| thready.kill  }
   ADMIN_THREAD.kill
 end
 
