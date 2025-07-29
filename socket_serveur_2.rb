@@ -2,29 +2,31 @@ require 'socket'
 require 'colorize'
 
 # Adresse d'écoute pour le serveur
-adresse = "127.0.0.1"
-adresse = ARGV[0] if ARGV[0].class.name != "NilClass"
+$adresse = "127.0.0.1"
+$adresse = ARGV[0] if ARGV[0].class.name != "NilClass"
 
 # Port d'écoute pour le serveur
-port = 65000
-port = ARGV[1] if ARGV[1].class.name != "NilClass"
+$port = 65000
+$port = ARGV[1] if ARGV[1].class.name != "NilClass"
 
 # Limite du nombre de clients
-LIMITE = 10
+$limite = 10
+$limite = ARGV[2] if ARGV[2].class.name != "NilClass"
 
 # Array contenant les sockets des clients
 CLIENTS = Array.new
 
 # On crée un serveur de sockets TCP et on le fait écouter
-serveur = TCPServer.new(adresse,port)
-print "Serveur ouvert depuis #{adresse}:#{port} ... \n"
+$serveur = TCPServer.new($adresse,$port)
+print "Serveur ouvert depuis #{$adresse}:#{$port} ... \n"
 
-LIMITE.times do |chiffre|
 
-  CLIENTS[chiffre] = Thread.new do
+$limite.times do |chiffre|
+
+  CLIENTS[chiffre] =  Thread.new do
     
     Thread.current[:client_handle] = nil
-    client = serveur.accept
+    client = $serveur.accept
     Thread.current[:client_handle] = client
     print "Client #{chiffre} a rejoint le serveur ! \n"
     
@@ -46,10 +48,42 @@ LIMITE.times do |chiffre|
 
 end
 
+# Active à nouveau les threads déjà désactivés.
+def rafraichir()
+  print "Rafraichissement des threads...\n"
+  CLIENTS.each_with_index do |thready,index|
+    if !thready.alive?
+      CLIENTS[index] =  Thread.new do
+
+        Thread.current[:client_handle] = nil
+        client = $serveur.accept
+        Thread.current[:client_handle] = client
+        print "Client #{chiffre} a rejoint le serveur ! \n"
+
+        while message = client.gets
+
+          print "#{chiffre}> #{message} "
+
+          if message.strip == "sortie"
+            client.puts "fincommu"
+            Thread.current.kill
+            break
+          end
+
+          client.puts "recu!"
+
+        end
+        print "Client #{chiffre} a quitté le serveur ! \n"
+      end
+    end
+  end
+end
+
 # Affiche tous les threads de clients du serveur
 def montrer_threads()
+  print "i |  alive?\n"
   CLIENTS.each_with_index do |thready,index|
-    print "#{index}> #{thready.class.name} \n"
+    print "#{index} | #{thready.alive?} | \n" 
   end
 end
 
@@ -72,6 +106,7 @@ def montrer_commande()
   print " exit    - Ejecte tous les clients du serveur, y compris l'administrateur, et arrête le serveur. \n"
   print " help    - Affiche toutes les commandes et leurs descriptions. \n"
   print " clients - Affiche tous les threads de clients \n"
+  print " refresh - Active tous les threads désactivés \n"
 end
 
 # Un autre thread qui surveille les actions de l'administrateur du serveur
@@ -88,6 +123,8 @@ ADMIN_THREAD = Thread.new do
       montrer_commande
     when "clients"
       montrer_threads
+    when "refresh"
+      rafraichir
     when ""
     else
       print("Commande inconnue.\n")
@@ -107,6 +144,6 @@ CLIENTS.each { |thready| thready.join  }
 ADMIN_THREAD.join
 
 print "Fermeture du serveur... \n"
-serveur.close
+$serveur.close
 
 
