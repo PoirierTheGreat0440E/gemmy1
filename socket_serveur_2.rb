@@ -19,9 +19,10 @@ CLIENTS = Array.new
 # On crée un serveur de sockets TCP et on le fait écouter
 $serveur = TCPServer.new($adresse,$port)
 print "Serveur ouvert depuis #{$adresse}:#{$port} ... \n"
+print "Nombre de clients : #{$limite} \n"
 
 
-$limite.times do |chiffre|
+$limite.to_i.times do |chiffre|
 
   CLIENTS[chiffre] =  Thread.new do
     
