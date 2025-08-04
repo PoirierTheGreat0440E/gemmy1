@@ -28,6 +28,7 @@ $limite.to_i.times do |chiffre|
     
     Thread.current[:client_handle] = nil
     client = $serveur.accept
+    client.puts "BOnjour!!"
     Thread.current[:client_handle] = client
     print "Client #{chiffre} a rejoint le serveur ! \n"
     

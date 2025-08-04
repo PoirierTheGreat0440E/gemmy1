@@ -51,9 +51,42 @@ class FenetreConnexion(tkinter.Toplevel):
         self.texte_surnom.grid(row=0,column=1,padx=20,pady=20)
         self.texte_adresse.grid(row=1,column=1,padx=20,pady=20)
 
-        self.bouton_connexion = tkinter.Button(self,text="Connexion", command = lambda : tentative_connexion(self.surnom_saisi.get(),self.adresse_saisie.get()) )
+        self.bouton_connexion = tkinter.Button(self,text="Connexion")
         self.bouton_connexion.grid(row=2,column=0,columnspan=2,padx=20,pady=20)
-   
+        self.bouton_connexion.bind('<Button>',self.tenter_connexion)
+
+        # Le connecteur qui sera utilisé pour communiquer avec un serveur.
+        self.connecteur = socket.socket()
+
+    def tenter_connexion(self,event):
+        SURNOM = "GUEST"
+        ADRESSE = "127.0.0.1"
+        if  self.surnom_saisi.get().strip() != "":
+            SURNOM = self.surnom_saisi.get()
+        if  self.adresse_saisie.get().strip() != "":
+            ADRESSE = adresse_saisie.get()
+        PORT = 65000
+        print("Connection vers {}:{}".format(ADRESSE,PORT))
+        try:
+
+            connexion = self.connecteur.connect( (ADRESSE,PORT)  )
+            print("Connexion créée avec succès")
+            reception = ""
+            while reception != "fincommu" :
+ 
+                envoi = input(">>> : ")
+                self.connecteur.sendall( bytearray(envoi+"\n","utf-8")  )              
+
+                reception = self.connecteur.recv(1024).decode("utf-8").strip()
+                print(reception)
+                           
+            self.connecteur.close()
+            print("Connexion fermée avec succès")
+        except Exception as erreur:
+            print("Connexion échouée !")
+            print(erreur)
+
+
 class FenetrePrincipale(tkinter.Frame):
 
     def __init__(self,master):
