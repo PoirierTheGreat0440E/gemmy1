@@ -14,23 +14,27 @@ $limite = 10
 $limite = ARGV[2] if ARGV[2].class.name != "NilClass"
 
 # Array contenant les sockets des clients
-CLIENTS = Array.new
+CLIENTS_RECEPTION = Array.new
 
 # On crée un serveur de sockets TCP et on le fait écouter
-$serveur = TCPServer.new($adresse,$port)
-print "Serveur ouvert depuis #{$adresse}:#{$port} ... \n"
+$serveur_reception = TCPServer.new($adresse,$port)
+
+print "Serveur reception ouvert depuis #{$adresse}:#{$port} ... \n"
 print "Nombre de clients : #{$limite} \n"
 
 
 $limite.to_i.times do |chiffre|
 
-  CLIENTS[chiffre] =  Thread.new do
+  # ========================================================
+  # On initialise les threads pour le serveur de réception...
+  # ========================================================
+  
+  CLIENTS_RECEPTION[chiffre] =  Thread.new do
     
     Thread.current[:client_handle] = nil
-    client = $serveur.accept
-    client.puts "BOnjour!!"
+    client = $serveur_reception.accept
     Thread.current[:client_handle] = client
-    print "Client #{chiffre} a rejoint le serveur ! \n"
+    print "RECEPTION> Client #{chiffre} a rejoint le serveur ! \n"
     
     while message = client.gets
       
@@ -45,17 +49,19 @@ $limite.to_i.times do |chiffre|
       client.puts "recu!"
 
     end
-    print "Client #{chiffre} a quitté le serveur ! \n"
+    print "RECEPTION> Client #{chiffre} a quitté le serveur ! \n"
+
   end
+
 
 end
 
 # Active à nouveau les threads déjà désactivés.
 def rafraichir()
   print "Rafraichissement des threads...\n"
-  CLIENTS.each_with_index do |thready,index|
+  CLIENTS_RECEPTION.each_with_index do |thready,index|
     if !thready.alive?
-      CLIENTS[index] =  Thread.new do
+      CLIENTS_RECEPTION[index] =  Thread.new do
 
         Thread.current[:client_handle] = nil
         client = $serveur.accept
@@ -84,14 +90,14 @@ end
 # Affiche tous les threads de clients du serveur
 def montrer_threads()
   print "i |  alive?\n"
-  CLIENTS.each_with_index do |thready,index|
+  CLIENTS_RECEPTION.each_with_index do |thready,index|
     print "#{index} | #{thready.alive?} | \n" 
   end
 end
 
 # Force tous les clients à quitter le serveur, provoquant l'arrêt de ce dernier.
 def vider_serveur()
-  CLIENTS.each_with_index do |thready,index| 
+  CLIENTS_RECEPTION.each_with_index do |thready,index| 
     if thready.class.name != "NilClass"
       #print thready[:client_handle].class.name , "\n"
       if thready[:client_handle] != nil
@@ -142,7 +148,7 @@ def arreter_serveur()
 end
 
 # On rejoint tous les threads qu'on a crée mdr...
-CLIENTS.each { |thready| thready.join  }
+CLIENTS_RECEPTION.each { |thready| thready.join  }
 ADMIN_THREAD.join
 
 print "Fermeture du serveur... \n"
