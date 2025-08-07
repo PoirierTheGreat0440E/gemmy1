@@ -99,9 +99,11 @@ class TableauDeBord(tkinter.Frame):
         # Connecteurs pour envoyer et écouter les messages...
         self.connecteur_envoi = socket.socket()
         self.connecteur_reception = socket.socket()
+        self.id_reception = -1
 
         # Le thread utilisé pour communiquer avec le serveur
         self.recepteur = threading.Thread(target=self.reception_asynchrone)
+        self.recepteur.daemon = True
 
         self.FC1 = None
        
@@ -114,11 +116,17 @@ class TableauDeBord(tkinter.Frame):
         try:
         
             # On commence par la connexion pour l'envoi des messages...
-            connexion = self.connecteur_envoi.connect( (ADRESSE,PORT)  )
-            self.connecteur_envoi.setblocking(0)
-            print("CONNEXION ENVOI > OK")
+            
+            connexion_pour_envoi = self.connecteur_envoi.connect( (ADRESSE,PORT)  )
+            self.id_reception = int(self.connecteur_envoi.recv(1024).decode("utf-8").strip())
+            print("ID de reception : "+str(self.id_reception))
+
+            connexion_pour_reception = self.connecteur_reception.connect( (ADRESSE,PORT+1) )
+            self.connecteur_reception.sendall( bytearray(str(self.id_reception)+"\n","utf-8") )
+            
+            print("PROCESSUS DE CONNEXION > OK")
            
-            self.recepteur.start()
+            #self.recepteur.start()
             #self.recepteur.join()
         
         except Exception as erreur:
@@ -127,9 +135,12 @@ class TableauDeBord(tkinter.Frame):
 
     def reception_asynchrone(self):        
         message_recu = ""
-        while message_recu != "fincommu" :
-            message_recu = self.connecteur_envoi.recv(1024).decode("utf-8").strip()
-            print(">>> Reception : " + message_recu)
+        try:
+            while message_recu != "fincommu" :
+                message_recu = self.connecteur_envoi.recv(1024).decode("utf-8").strip()
+                print(">>> Reception : " + message_recu)
+        except Exception as erreur_reception:
+            print("ERR RECEPTION > "+str(erreur_reception))
     
     def react_to_key(self,event):
         try:
@@ -139,7 +150,7 @@ class TableauDeBord(tkinter.Frame):
                 self.connecteur_envoi.close()
                 print("Connexion fermée")
         except Exception as erreur:
-            print(event)
+            print("ERR ENVOI > "+str(event))
 
     
 def main():

@@ -15,11 +15,14 @@ $limite = ARGV[2] if ARGV[2].class.name != "NilClass"
 
 # Array contenant les sockets des clients
 CLIENTS_RECEPTION = Array.new
+CLIENTS_ENVOI = Array.new
 
 # On crée un serveur de sockets TCP et on le fait écouter
 $serveur_reception = TCPServer.new($adresse,$port)
+$serveur_envoi = TCPServer.new($adresse,$port+1)
 
-print "Serveur reception ouvert depuis #{$adresse}:#{$port} ... \n"
+print "Ouvert RECEPTION #{$adresse}:#{$port} ... \n"
+print "Ouvert ENVOI #{$adresse}:#{$port+1} ... \n"
 print "Nombre de clients : #{$limite} \n"
 
 
@@ -38,7 +41,7 @@ $limite.to_i.times do |chiffre|
     
     while message = client.gets
       
-      print "#{chiffre}> #{message} "
+      print "RECEPTION #{chiffre}> #{message} "
 
       if message.strip == "sortie"
         client.puts "fincommu"
@@ -53,6 +56,26 @@ $limite.to_i.times do |chiffre|
 
   end
 
+  # ========================================================
+  # On initialise les threads pour le serveur d'envoi...
+  # ========================================================
+  
+  CLIENTS_ENVOI[chiffre] =  Thread.new do
+    
+    Thread.current[:client_handle] = nil
+    client = $serveur_envoi.accept
+    Thread.current[:client_handle] = client
+    print "ENVOI> Client #{chiffre} a rejoint le serveur ! \n"
+    
+    while message = client.gets
+      
+      print "ENVOI #{chiffre}> #{message} "
+
+    end
+
+    print "ENVOI> Client #{chiffre} a quitté le serveur ! \n"
+
+  end
 
 end
 
