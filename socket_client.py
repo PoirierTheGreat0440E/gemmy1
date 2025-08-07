@@ -98,7 +98,9 @@ class TableauDeBord(tkinter.Frame):
        
         # Connecteurs pour envoyer et écouter les messages...
         self.connecteur_envoi = socket.socket()
+        self.connecteur_envoi.setblocking(0)
         self.connecteur_reception = socket.socket()
+        self.connecteur_reception.setblocking(0)
         self.id_reception = -1
 
         # Le thread utilisé pour communiquer avec le serveur
@@ -121,13 +123,14 @@ class TableauDeBord(tkinter.Frame):
             self.id_reception = int(self.connecteur_envoi.recv(1024).decode("utf-8").strip())
             print("ID de reception : "+str(self.id_reception))
 
+            # Maintenant que l'on a reçu l'id de réception, on peut le communiquer au serveur de réception...
             connexion_pour_reception = self.connecteur_reception.connect( (ADRESSE,PORT+1) )
-            self.connecteur_reception.sendall( bytearray(str(self.id_reception)+"\n","utf-8") )
+            self.connecteur_reception.sendall( bytearray("idReception:"+str(self.id_reception)+"\n","utf-8") )
             
             print("PROCESSUS DE CONNEXION > OK")
            
-            #self.recepteur.start()
-            #self.recepteur.join()
+            self.recepteur.start()
+            self.recepteur.join()
         
         except Exception as erreur:
             print("Connexion échouée !")
@@ -136,9 +139,8 @@ class TableauDeBord(tkinter.Frame):
     def reception_asynchrone(self):        
         message_recu = ""
         try:
-            while message_recu != "fincommu" :
-                message_recu = self.connecteur_envoi.recv(1024).decode("utf-8").strip()
-                print(">>> Reception : " + message_recu)
+            message_recu = self.connecteur_reception.recv(1024).decode("utf-8").strip()
+            print(">>> Reception : " + message_recu)
         except Exception as erreur_reception:
             print("ERR RECEPTION > "+str(erreur_reception))
     
@@ -146,11 +148,15 @@ class TableauDeBord(tkinter.Frame):
         try:
             self.connecteur_envoi.sendall( bytearray(event.keysym+"\n","utf-8") )
             if event.keysym == 'q':
-                self.connecteur_envoi.sendall( bytearray("sortie\n","utf-8") )
-                self.connecteur_envoi.close()
-                print("Connexion fermée")
+                self.deconnexion()
         except Exception as erreur:
             print("ERR ENVOI > "+str(event))
+
+    def deconnexion(self):
+        self.connecteur_reception.sendall( bytearray("sortie\n","utf-8") )
+        self.connecteur_reception.close()
+        self.connecteur_envoi.close()
+        print("Déconnexion réussie !")
 
     
 def main():

@@ -18,11 +18,11 @@ CLIENTS_RECEPTION = Array.new
 CLIENTS_ENVOI = Array.new
 
 # On crée un serveur de sockets TCP et on le fait écouter
-$serveur_reception = TCPServer.new($adresse,$port)
-$serveur_envoi = TCPServer.new($adresse,$port+1)
+$serveur_reception = TCPServer.new($adresse,$port+1)
+$serveur_envoi = TCPServer.new($adresse,$port)
 
-print "Ouvert RECEPTION #{$adresse}:#{$port} ... \n"
-print "Ouvert ENVOI #{$adresse}:#{$port+1} ... \n"
+print "Ouvert RECEPTION #{$adresse}:#{$port+1} ... \n"
+print "Ouvert ENVOI #{$adresse}:#{$port} ... \n"
 print "Nombre de clients : #{$limite} \n"
 
 
@@ -49,7 +49,7 @@ $limite.to_i.times do |chiffre|
         break
       end
 
-      client.puts "recu!"
+      #client.puts "recu!"
 
     end
     print "RECEPTION> Client #{chiffre} a quitté le serveur ! \n"
@@ -65,8 +65,11 @@ $limite.to_i.times do |chiffre|
     Thread.current[:client_handle] = nil
     client = $serveur_envoi.accept
     Thread.current[:client_handle] = client
-    print "ENVOI> Client #{chiffre} a rejoint le serveur ! \n"
     
+    print "ENVOI> Client #{chiffre} a rejoint le serveur ! \n"
+
+    Thread.current[:client_handle].puts chiffre
+
     while message = client.gets
       
       print "ENVOI #{chiffre}> #{message} "
