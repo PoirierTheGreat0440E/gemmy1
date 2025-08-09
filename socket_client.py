@@ -71,7 +71,7 @@ class FenetrePrincipale(tkinter.Frame):
 
     def __init__(self,master):
         super().__init__(master)
-        self.configure(background="green")
+        self.configure(background="white")
         self.pack(expand=True,fill=tkinter.BOTH)
 
         self.TDB1 = TableauDeBord(self)
@@ -85,7 +85,7 @@ class TableauDeBord(tkinter.Frame):
 
     def __init__(self,master):
         super().__init__(master)
-        self.configure(background="red",width=200)
+        self.configure(background="gainsboro",width=200)
         self.pack(expand=True,fill=tkinter.Y,side=tkinter.LEFT)
         
         self.bouton_connexion = tkinter.Button(self,text="Partie multijoueur",width=20, command=self.creer_fenetre_connexion )

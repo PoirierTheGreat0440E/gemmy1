@@ -1,0 +1,61 @@
+#!usr/bin/python3
+import tkinter
+import pyopengltk
+from pyopengltk import OpenGLFrame
+from OpenGL import GL, GLU
+
+#Dimensions de base de la fenetre...
+LONGUEUR = 1200
+HAUTEUR = 520
+
+class Liste_des_vertex(tkinter.Frame):
+
+    def __init__(self,master):
+        super().__init__(master)
+        self.configure(width=int(LONGUEUR/2),height=HAUTEUR,bg="green")
+        self.grid(row=0,column=2)
+        self.liste_conteneur = tkinter.Listbox(self,bg="magenta",height=25,width=37)
+        self.liste_conteneur.pack(side=tkinter.TOP)
+
+class Tableau_de_bord(tkinter.Frame):
+
+    def __init__(self,master):
+        super().__init__(master)
+        self.configure(width=int(LONGUEUR/4),height=HAUTEUR,bg="yellow")
+        self.grid(row=0,column=0)
+
+class Visionneur_Tridimensionnel(OpenGLFrame):
+
+    def __init__(self,master):
+        super().__init__(master)
+        self.configure(width=int(LONGUEUR/2),height=HAUTEUR,bg="blue")
+        self.grid(row=0,column=1)
+
+    def initgl(self):
+        GL.glLoadIdentity()
+        GL.glClearColor(0,0,0,255)
+        GLU.gluPerspective( 45 , (self.width/self.height) , 0.1 , 50 )
+        GL.glTranslatef(0.0,0.0,-5)
+
+    def redraw(self):
+        pass
+
+class FenetrePrincipale(tkinter.Frame):
+
+    def __init__(self,master):
+        super().__init__(master)
+        self.configure(bg="red")
+        self.pack(expand=True,fill=tkinter.BOTH)
+        self.TDB1 = Tableau_de_bord(self)
+        self.VT1 = Visionneur_Tridimensionnel(self)
+        self.LDV1 = Liste_des_vertex(self)
+
+def main():
+    root = tkinter.Tk()
+    root.title("Schema Designer v0.1")
+    root.geometry(str(LONGUEUR)+"x"+str(HAUTEUR))
+    root.resizable(False,False)
+    FP1 = FenetrePrincipale(root)
+    root.mainloop()
+
+main()
