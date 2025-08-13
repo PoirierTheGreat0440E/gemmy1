@@ -13,10 +13,10 @@ class Liste_des_vertex(tkinter.Frame):
 
     def __init__(self,master):
         super().__init__(master)
-        self.configure(width=int(LONGUEUR/2),height=HAUTEUR,bg="green")
-        self.grid(row=0,column=2)
-        self.liste_conteneur = tkinter.Listbox(self,bg="magenta",height=25,width=37)
-        self.liste_conteneur.pack(side=tkinter.TOP)
+        self.configure(bg="green")
+        self.pack(side=tkinter.LEFT,expand=True,fill=tkinter.BOTH)
+        self.liste_conteneur = tkinter.Listbox(self)
+        self.liste_conteneur.pack(side=tkinter.TOP,expand=True,fill=tkinter.Y)
         self.liste_de_vertex = []
 
     def mettre_listbox_a_jour(self):
@@ -33,18 +33,23 @@ class Liste_des_vertex(tkinter.Frame):
 class Tableau_de_bord(tkinter.Frame):
 
     def __init__(self,master):
+
         super().__init__(master)
-        self.configure(width=int(LONGUEUR/4),height=HAUTEUR,bg="yellow")
-        self.grid(row=0,column=0)
+        self.configure(bg="pink")
+        self.pack(side=tkinter.LEFT,expand=True,fill=tkinter.Y)
+
         self.label_mode = tkinter.Label(self,text="MODE:???")
         self.label_mode.pack()
+
+        self.label_position_curseur = tkinter.Label(self,text="CURSEUR> X:? Y:? Z:?")
+        self.label_position_curseur.pack()
 
 class Visionneur_Tridimensionnel(OpenGLFrame):
 
     def __init__(self,master):
         super().__init__(master)
         self.configure(width=int(LONGUEUR/2),height=HAUTEUR,bg="blue")
-        self.grid(row=0,column=1)
+        self.pack(side=tkinter.LEFT)
 
     def initgl(self):
         GL.glLoadIdentity()
@@ -59,7 +64,7 @@ class FenetrePrincipale(tkinter.Frame):
 
     def __init__(self,master):
         super().__init__(master)
-        self.configure(bg="red")
+        self.configure(bg="gainsboro")
         self.pack(expand=True,fill=tkinter.BOTH)
         self.TDB1 = Tableau_de_bord(self)
         self.VT1 = Visionneur_Tridimensionnel(self)
@@ -70,9 +75,14 @@ class FenetrePrincipale(tkinter.Frame):
     def reaction_clavier_relache(self,event):
         if event.keysym == 'q':
             self.mode = "INSERTION"
+            self.TDB1.label_mode.configure(text="MODE:"+self.mode)
         elif event.keysym == 'w':
-            self.mode = "VISUAL"
-        self.TDB1.label_mode.configure(text="MODE:"+self.mode)
+            self.mode = "VISUEL"
+            self.TDB1.label_mode.configure(text="MODE:"+self.mode)
+        elif event.keysym == "Escape":
+            self.mode = "VIDE"
+            self.TDB1.label_mode.configure(text="MODE:"+self.mode)
+        
 
     def reaction_clavier_appui(self,event):
         print(event)
@@ -95,6 +105,10 @@ class FenetrePrincipale(tkinter.Frame):
             self.vertex_curseur.nouvelle_position(self.vertex_curseur.pos_x,self.vertex_curseur.pos_y,self.vertex_curseur.pos_z+1)
         elif event.keysym == 'l':
             self.vertex_curseur.nouvelle_position(self.vertex_curseur.pos_x,self.vertex_curseur.pos_y,self.vertex_curseur.pos_z-1)
+        self.TDB1.label_position_curseur.configure(text="CURSEUR> X:{} Y:{} Z:{}".format(self.vertex_curseur.pos_x,self.vertex_curseur.pos_y,self.vertex_curseur.pos_z))
+
+    def arret_application(self,event):
+        self.master.destroy()
 
 
 def main():
@@ -105,6 +119,7 @@ def main():
     FP1 = FenetrePrincipale(root)
     root.bind('<Key>',FP1.reaction_clavier_appui)
     root.bind('<KeyRelease>',FP1.reaction_clavier_relache)
+    root.bind(':A',FP1.arret_application)
     root.mainloop()
 
 main()
