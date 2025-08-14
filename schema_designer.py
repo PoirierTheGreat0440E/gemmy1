@@ -50,12 +50,20 @@ class Visionneur_Tridimensionnel(OpenGLFrame):
         super().__init__(master)
         self.configure(width=int(LONGUEUR/2),height=HAUTEUR,bg="blue")
         self.pack(side=tkinter.LEFT)
+        self.donnees_camera = { "distance":1 , "angle_horizontal":0 , "angle_vertical":0 , "position_objectif":[0,0,0] }
 
     def initgl(self):
         GL.glLoadIdentity()
         GL.glClearColor(0,0,0,255)
         GLU.gluPerspective( 45 , (self.width/self.height) , 0.1 , 50 )
         GL.glTranslatef(0.0,0.0,-5)
+
+    def tourner_camera(self,variation_angle_horizontal,variation_angle_vertical):
+        pass
+
+    def definir_position_camera(self,nouvelle_position_objectif):
+        self.donnees_camera = nouvelle_position_objectif
+
 
     def redraw(self):
         pass
